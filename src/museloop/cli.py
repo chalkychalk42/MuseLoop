@@ -279,6 +279,56 @@ def templates(
         console.print(table)
 
 
+@app.command(name="export")
+def export_cmd(
+    input_file: str = typer.Argument(..., help="Input video/image file"),
+    preset: str = typer.Option("youtube_1080p", "--preset", "-p", help="Export preset name"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+    mode: str = typer.Option("fit", "--mode", "-m", help="Resize mode: fit, fill, or stretch"),
+    list_presets: bool = typer.Option(False, "--list", help="List available presets"),
+) -> None:
+    """Export a video/image to a platform-specific format."""
+    from museloop.export.presets import list_presets as _list_presets
+
+    if list_presets:
+        table = Table(title="Export Presets")
+        table.add_column("Name", style="cyan")
+        table.add_column("Resolution")
+        table.add_column("Aspect Ratio")
+        for p in _list_presets():
+            table.add_row(p["name"], p["resolution"], p["aspect_ratio"])
+        console.print(table)
+        return
+
+    input_path = Path(input_file)
+    if not input_path.exists():
+        console.print(f"[red]Error:[/red] Input file not found: {input_path}")
+        raise typer.Exit(1)
+
+    from museloop.export.renderer import ExportRenderer
+
+    try:
+        renderer = ExportRenderer(preset)
+    except KeyError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+    info = renderer.get_info()
+    console.print(f"\n[bold cyan]Export[/bold cyan] {input_path.name}")
+    console.print(f"  Preset: {info['name']} ({info['resolution']}, {info['aspect_ratio']})")
+    console.print(f"  Mode: {mode}")
+
+    try:
+        result_path = renderer.render(str(input_path), output, mode=mode)
+        console.print(f"\n[green bold]Done![/green bold] Output: {result_path}")
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except RuntimeError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
 @app.command()
 def version() -> None:
     """Show MuseLoop version."""
