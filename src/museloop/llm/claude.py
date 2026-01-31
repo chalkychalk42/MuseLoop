@@ -29,7 +29,13 @@ class ClaudeBackend:
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}],
         )
-        return response.content[0].text
+        if not response.content:
+            raise ValueError("Claude returned an empty response")
+        # Extract text from the first text block, skipping tool_use blocks
+        for block in response.content:
+            if block.type == "text":
+                return block.text
+        raise ValueError(f"Claude response contained no text blocks: {[b.type for b in response.content]}")
 
     async def stream(
         self,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,9 @@ from museloop.utils.logging import get_logger
 from museloop.versioning.git_ops import GitOps
 
 logger = get_logger(__name__)
+
+# Maximum time (seconds) for a single graph invocation before timeout
+GRAPH_TIMEOUT_SECONDS = 600
 
 
 async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
@@ -31,9 +35,17 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
 
     # Initialize components
     llm = get_llm_backend(config)
-    registry = SkillRegistry()
+
+    # Pass relevant config to skill constructors
+    skill_config = {
+        "comfyui_url": config.comfyui_url or "http://localhost:8188",
+        "replicate_api_key": config.replicate_api_key,
+    }
+    registry = SkillRegistry(skill_config=skill_config)
     registry.discover()
-    logger.info("skills_discovered", count=len(registry.list_skills()), skills=registry.list_skills())
+    logger.info(
+        "skills_discovered", count=len(registry.list_skills()), skills=registry.list_skills()
+    )
 
     graph = build_graph(llm=llm, registry=registry, config=config)
 
@@ -55,19 +67,41 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
 
     best_score = 0.0
     best_iteration = 0
+    all_assets: list[dict[str, Any]] = []
 
     for i in range(config.max_iterations):
         state["iteration"] = i + 1
         logger.info("iteration_start", iteration=state["iteration"])
 
-        # Run the LangGraph graph for one full pass
-        result = await graph.ainvoke(state)
+        # Run the LangGraph graph with timeout protection
+        try:
+            result = await asyncio.wait_for(
+                graph.ainvoke(state), timeout=GRAPH_TIMEOUT_SECONDS
+            )
+        except asyncio.TimeoutError:
+            logger.error(
+                "iteration_timeout",
+                iteration=state["iteration"],
+                timeout=GRAPH_TIMEOUT_SECONDS,
+            )
+            continue
 
-        # Update state with graph results
+        if not isinstance(result, dict):
+            logger.error("invalid_graph_result", type=type(result).__name__)
+            continue
+
+        # Accumulate assets across iterations
+        iteration_assets = result.get("assets", [])
+        for asset in iteration_assets:
+            asset["iteration"] = i + 1
+        all_assets.extend(iteration_assets)
+
+        # Update state — keep accumulated assets
         state.update(result)
+        state["assets"] = all_assets
 
         # Git commit this iteration's outputs
-        git.commit_iteration(i + 1, state.get("assets", []))
+        git.commit_iteration(i + 1, iteration_assets)
 
         # Track best iteration
         score = state.get("critique", {}).get("score", 0.0)
@@ -97,6 +131,7 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
         total_iterations=state["iteration"],
         best_score=best_score,
         best_iteration=best_iteration,
+        total_assets=len(all_assets),
     )
 
     return output_path

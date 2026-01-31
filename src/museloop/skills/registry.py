@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 from pathlib import Path
+from typing import Any
 
 from museloop.skills.base import BaseSkill
 from museloop.utils.logging import get_logger
@@ -18,8 +19,9 @@ _MANIFESTS_DIR = Path(__file__).parent / "manifests"
 class SkillRegistry:
     """Discovers and loads skills from the manifests directory."""
 
-    def __init__(self) -> None:
+    def __init__(self, skill_config: dict[str, Any] | None = None) -> None:
         self._skills: dict[str, BaseSkill] = {}
+        self._skill_config = skill_config or {}
 
     def discover(self, manifests_dir: str | Path | None = None) -> None:
         """Scan manifests directory for JSON files and load corresponding skills."""
@@ -36,7 +38,9 @@ class SkillRegistry:
 
                 module = importlib.import_module(module_name)
                 skill_class = getattr(module, class_name)
-                skill = skill_class()
+
+                # Pass config to skill constructors that accept keyword args
+                skill = self._instantiate_skill(skill_class)
                 self._skills[skill.name] = skill
 
                 logger.info("skill_loaded", name=skill.name, module=module_name)
@@ -46,6 +50,19 @@ class SkillRegistry:
                     manifest=manifest_file.name,
                     error=str(e),
                 )
+
+    def _instantiate_skill(self, skill_class: type) -> BaseSkill:
+        """Instantiate a skill, passing relevant config from skill_config."""
+        import inspect
+
+        sig = inspect.signature(skill_class.__init__)
+        kwargs: dict[str, Any] = {}
+        for param_name, param in sig.parameters.items():
+            if param_name == "self":
+                continue
+            if param_name in self._skill_config:
+                kwargs[param_name] = self._skill_config[param_name]
+        return skill_class(**kwargs)
 
     def register(self, skill: BaseSkill) -> None:
         """Manually register a skill instance."""

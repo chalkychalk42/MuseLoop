@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,9 @@ from museloop.llm.base import LLMBackend
 from museloop.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Regex to extract JSON from markdown fences or raw text
+_JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*\n?(.*?)\n?\s*```", re.DOTALL)
 
 
 class BaseAgent(ABC):
@@ -44,16 +48,47 @@ class BaseAgent(ABC):
         )
 
     async def _call_llm_json(self, user_message: str, **kwargs: Any) -> dict[str, Any]:
-        """Call the LLM and parse the response as JSON."""
+        """Call the LLM and parse the response as JSON.
+
+        Handles markdown code fences, leading/trailing text around JSON,
+        and provides clear error messages on parse failure.
+        """
         response = await self._call_llm(user_message, **kwargs)
-        # Strip markdown code fences if present
+        return self._parse_json_response(response)
+
+    @staticmethod
+    def _parse_json_response(response: str) -> dict[str, Any]:
+        """Extract and parse JSON from an LLM response string."""
         text = response.strip()
-        if text.startswith("```"):
-            lines = text.split("\n")
-            # Remove first and last lines (```json and ```)
-            lines = [l for l in lines[1:] if not l.strip() == "```"]
-            text = "\n".join(lines)
-        return json.loads(text)
+
+        # Try 1: direct parse
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Try 2: extract from markdown code fence
+        match = _JSON_BLOCK_RE.search(text)
+        if match:
+            try:
+                return json.loads(match.group(1).strip())
+            except json.JSONDecodeError:
+                pass
+
+        # Try 3: find first { ... } block in the text
+        brace_start = text.find("{")
+        brace_end = text.rfind("}")
+        if brace_start != -1 and brace_end > brace_start:
+            try:
+                return json.loads(text[brace_start : brace_end + 1])
+            except json.JSONDecodeError:
+                pass
+
+        raise json.JSONDecodeError(
+            f"Could not extract valid JSON from LLM response ({len(text)} chars)",
+            text[:200],
+            0,
+        )
 
     @abstractmethod
     async def run(self, state: LoopState) -> dict[str, Any]:

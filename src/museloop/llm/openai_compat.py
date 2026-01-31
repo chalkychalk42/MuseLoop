@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import AsyncIterator
 
 import httpx
@@ -12,7 +13,7 @@ class OpenAICompatBackend:
 
     def __init__(
         self,
-        api_key: str = "not-needed",
+        api_key: str = "",
         base_url: str = "http://localhost:11434/v1",
         model: str = "llama3.2",
     ):
@@ -28,10 +29,14 @@ class OpenAICompatBackend:
         max_tokens: int = 4096,
         temperature: float = 0.7,
     ) -> str:
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
+                headers=headers,
                 json={
                     "model": self.model,
                     "messages": [
@@ -46,7 +51,10 @@ class OpenAICompatBackend:
             )
             response.raise_for_status()
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            try:
+                return data["choices"][0]["message"]["content"]
+            except (KeyError, IndexError, TypeError) as e:
+                raise ValueError(f"Unexpected response structure from OpenAI-compatible API: {e}")
 
     async def stream(
         self,
@@ -56,11 +64,15 @@ class OpenAICompatBackend:
         max_tokens: int = 4096,
         temperature: float = 0.7,
     ) -> AsyncIterator[str]:
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
         async with httpx.AsyncClient() as client:
             async with client.stream(
                 "POST",
                 f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
+                headers=headers,
                 json={
                     "model": self.model,
                     "messages": [
@@ -74,11 +86,14 @@ class OpenAICompatBackend:
                 timeout=120.0,
             ) as response:
                 response.raise_for_status()
-                import json
 
                 async for line in response.aiter_lines():
-                    if line.startswith("data: ") and line != "data: [DONE]":
+                    if not line.startswith("data: ") or line == "data: [DONE]":
+                        continue
+                    try:
                         chunk = json.loads(line[6:])
                         delta = chunk["choices"][0].get("delta", {})
                         if content := delta.get("content"):
                             yield content
+                    except (json.JSONDecodeError, KeyError, IndexError):
+                        continue
