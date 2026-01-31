@@ -190,6 +190,33 @@ def serve(
 
 
 @app.command()
+def dashboard(
+    host: str = typer.Option("127.0.0.1", "--host", "-H", help="Bind address"),
+    port: int = typer.Option(8420, "--port", "-p", help="Port number"),
+) -> None:
+    """Launch the web dashboard."""
+    try:
+        import uvicorn
+
+        from museloop.web.app import create_app
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] Web dependencies not installed. "
+            "Install with: [cyan]uv pip install 'museloop[web]'[/cyan]"
+        )
+        raise typer.Exit(1)
+
+    from museloop.config import MuseLoopConfig
+
+    console.print(f"[bold cyan]MuseLoop Dashboard v{__version__}[/bold cyan]")
+    console.print(f"Running at http://{host}:{port}")
+
+    config = MuseLoopConfig()
+    app_instance = create_app(config)
+    uvicorn.run(app_instance, host=host, port=port, log_level="info")
+
+
+@app.command()
 def version() -> None:
     """Show MuseLoop version."""
     console.print(f"MuseLoop v{__version__}")

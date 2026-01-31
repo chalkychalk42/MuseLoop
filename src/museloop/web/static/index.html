@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MuseLoop Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+  <script src="/static/app.js"></script>
+</head>
+<body>
+  <div x-data="dashboard">
+    <!-- Header -->
+    <header>
+      <div class="container">
+        <div class="logo">MuseLoop <span>Dashboard</span></div>
+        <div class="ws-status" :class="wsConnected ? 'connected' : 'disconnected'"
+             x-text="wsConnected ? 'Connected' : 'Disconnected'"></div>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- New Job Form -->
+      <section>
+        <div class="card">
+          <h3>New Pipeline Job</h3>
+          <form @submit.prevent="submitJob">
+            <div class="form-grid">
+              <div class="full">
+                <label>Task</label>
+                <textarea x-model="form.task" placeholder="Describe what to create..." rows="2"></textarea>
+              </div>
+              <div>
+                <label>Style</label>
+                <input x-model="form.style" placeholder="e.g., cinematic, lo-fi, anime">
+              </div>
+              <div>
+                <label>Max Iterations</label>
+                <input type="number" x-model.number="form.max_iterations" min="1" max="20">
+              </div>
+              <div>
+                <label>Quality Threshold</label>
+                <input type="number" x-model.number="form.quality_threshold" min="0" max="1" step="0.05">
+              </div>
+              <div style="display:flex;align-items:end">
+                <button type="submit" class="btn btn-primary">Start Pipeline</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- List View -->
+      <template x-if="view === 'list'">
+        <section>
+          <h3 style="margin-bottom:0.75rem;color:var(--text-dim)">
+            Jobs <span x-text="'(' + jobs.length + ')'"></span>
+          </h3>
+
+          <template x-if="jobs.length === 0">
+            <div class="empty">No jobs yet. Create one above.</div>
+          </template>
+
+          <div class="job-list">
+            <template x-for="job in jobs" :key="job.job_id">
+              <div class="job-item" @click="selectJob(job)">
+                <div class="job-task">
+                  <span x-text="job.job_id"></span>
+                  <br><small x-text="job.output_dir || ''"></small>
+                </div>
+                <span class="badge" :class="job.status" x-text="job.status"></span>
+                <div>
+                  <div class="progress-bar">
+                    <div class="fill" :style="'width:' + progressPct(job) + '%'"></div>
+                  </div>
+                  <small class="score" x-text="'Iter ' + job.iteration + '/' + job.max_iterations"></small>
+                </div>
+                <div class="score" x-text="formatScore(job.best_score)"></div>
+              </div>
+            </template>
+          </div>
+        </section>
+      </template>
+
+      <!-- Detail View -->
+      <template x-if="view === 'detail' && selectedJob">
+        <section>
+          <div style="margin-bottom:1rem">
+            <button class="btn btn-sm" @click="backToList">&larr; Back</button>
+            <span style="margin-left:0.5rem;font-weight:600" x-text="selectedJob.job_id"></span>
+            <span class="badge" :class="selectedJob.status" x-text="selectedJob.status"
+                  style="margin-left:0.5rem"></span>
+          </div>
+
+          <div class="detail-grid">
+            <div class="stat">
+              <div class="value" x-text="selectedJob.iteration + '/' + selectedJob.max_iterations"></div>
+              <div class="label">Iteration</div>
+            </div>
+            <div class="stat">
+              <div class="value" x-text="formatScore(selectedJob.score)"></div>
+              <div class="label">Current Score</div>
+            </div>
+            <div class="stat">
+              <div class="value" x-text="formatScore(selectedJob.best_score)"></div>
+              <div class="label">Best Score</div>
+            </div>
+            <div class="stat">
+              <div class="value" x-text="selectedJob.asset_count || 0"></div>
+              <div class="label">Assets</div>
+            </div>
+          </div>
+
+          <template x-if="selectedJob.status === 'awaiting_approval'">
+            <div class="card">
+              <h3>Approval Required</h3>
+              <p style="margin-bottom:0.75rem;color:var(--text-dim)">
+                This job needs human approval to continue.
+              </p>
+              <button class="btn btn-success" @click="approveJob(selectedJob.job_id, true)">Approve</button>
+              <button class="btn btn-sm" style="margin-left:0.5rem"
+                      @click="approveJob(selectedJob.job_id, false)">Reject</button>
+            </div>
+          </template>
+
+          <template x-if="selectedJob.error">
+            <div class="card" style="border-color:var(--error)">
+              <h3 style="color:var(--error)">Error</h3>
+              <p x-text="selectedJob.error" style="font-family:monospace;font-size:0.85rem"></p>
+            </div>
+          </template>
+        </section>
+      </template>
+
+      <!-- Skills -->
+      <section>
+        <div class="card">
+          <h3>Available Skills</h3>
+          <template x-if="skills.length === 0">
+            <p class="empty" style="padding:1rem">No skills discovered.</p>
+          </template>
+          <template x-for="skill in skills" :key="skill.name">
+            <div style="padding:0.3rem 0;border-bottom:1px solid var(--border)">
+              <strong x-text="skill.name" style="color:var(--accent-light)"></strong>
+              <span x-text="' — ' + skill.description" style="color:var(--text-dim)"></span>
+            </div>
+          </template>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
