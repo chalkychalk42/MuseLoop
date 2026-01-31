@@ -1,0 +1,56 @@
+name: tiktok_vertical
+category: social
+description: Optimized vertical video template for TikTok with aspect ratio 9:16
+default_style: trending
+default_skills:
+  - image_gen
+  - video_gen
+  - audio_gen
+  - editing
+
+duration_range: [15, 60]
+
+export:
+  aspect_ratio: "9:16"
+  resolution: 1080x1920
+  fps: 30
+  codec: h264
+
+steps:
+  - order: 1
+    skill: image_gen
+    description: Generate initial visual concept
+    params:
+      model: flux
+      style: trendy
+      num_images: 3
+
+  - order: 2
+    skill: video_gen
+    description: Create dynamic video transitions
+    params:
+      duration: 15
+      transition_style: smooth
+      effect: zoom_pan
+
+  - order: 3
+    skill: audio_gen
+    description: Generate trending audio or music
+    params:
+      genre: pop
+      duration: 30
+      energy_level: high
+
+  - order: 4
+    skill: editing
+    description: Sync video with audio and add captions
+    params:
+      add_captions: true
+      caption_style: modern
+      effects: true
+
+constraints:
+  max_file_size_mb: 50
+  required_captions: true
+  min_frame_rate: 24
+  watermark_optional: true

@@ -1,0 +1,63 @@
+name: social_carousel
+category: social
+description: Multi-image carousel template optimized for social media with 1:1 aspect ratio
+default_style: vibrant
+default_skills:
+  - image_gen
+  - img2img
+  - editing
+  - upscale
+
+duration_range: [5, 30]
+
+export:
+  aspect_ratio: "1:1"
+  resolution: 1080x1080
+  fps: 1
+  codec: png_sequence
+
+steps:
+  - order: 1
+    skill: image_gen
+    description: Generate diverse carousel images with consistent branding
+    params:
+      model: flux
+      style: vibrant
+      num_images: 5
+      consistency_style: true
+
+  - order: 2
+    skill: img2img
+    description: Enhance and stylize each image for cohesion
+    params:
+      enhance_resolution: true
+      artistic_style: true
+      strength: 0.6
+      batch_process: true
+
+  - order: 3
+    skill: upscale
+    description: Upscale all images to maximum quality
+    params:
+      scale_factor: 2
+      enhance_details: true
+      denoise: true
+
+  - order: 4
+    skill: editing
+    description: Add text overlays, transitions, and timing
+    params:
+      add_text: true
+      text_position: bottom
+      add_transitions: true
+      frame_duration: 5
+      add_captions: true
+
+constraints:
+  max_file_size_mb: 50
+  square_aspect_ratio_strict: true
+  min_images: 2
+  max_images: 20
+  image_consistency: true
+  text_on_all_slides: optional
+  min_dpi: 96

@@ -1,0 +1,67 @@
+name: brand_video
+category: marketing
+description: Professional brand and marketing video template with 16:9 aspect ratio
+default_style: professional
+default_skills:
+  - image_gen
+  - video_gen
+  - tts
+  - editing
+
+duration_range: [15, 60]
+
+export:
+  aspect_ratio: "16:9"
+  resolution: 1920x1080
+  fps: 30
+  codec: h264
+
+steps:
+  - order: 1
+    skill: image_gen
+    description: Generate branded visuals and scenes
+    params:
+      model: flux
+      style: professional
+      num_images: 5
+
+  - order: 2
+    skill: video_gen
+    description: Create product showcase sequences
+    params:
+      duration: 30
+      transition_style: smooth
+      effect: fade
+      quality: high
+
+  - order: 3
+    skill: tts
+    description: Generate professional voiceover
+    params:
+      voice: professional_male
+      speed: 1.0
+      tone: confident
+
+  - order: 4
+    skill: captions
+    description: Add captions for accessibility and emphasis
+    params:
+      style: minimal
+      position: bottom
+      font_size: medium
+
+  - order: 5
+    skill: editing
+    description: Final color correction and audio mixing
+    params:
+      color_grade: brand
+      normalize_audio: true
+      add_logo: true
+      add_branding: true
+
+constraints:
+  max_file_size_mb: 100
+  brand_consistency: true
+  min_frame_rate: 24
+  audio_channels: stereo
+  include_logo: true

@@ -1,0 +1,64 @@
+name: youtube_shorts
+category: social
+description: Optimized vertical video template for YouTube Shorts with aspect ratio 9:16
+default_style: cinematic
+default_skills:
+  - image_gen
+  - video_gen
+  - audio_gen
+  - editing
+
+duration_range: [15, 60]
+
+export:
+  aspect_ratio: "9:16"
+  resolution: 1080x1920
+  fps: 30
+  codec: h264
+
+steps:
+  - order: 1
+    skill: image_gen
+    description: Generate compelling thumbnail-worthy visuals
+    params:
+      model: flux
+      style: cinematic
+      num_images: 2
+
+  - order: 2
+    skill: video_gen
+    description: Create high-quality video sequences
+    params:
+      duration: 30
+      transition_style: fade
+      quality: high
+
+  - order: 3
+    skill: audio_gen
+    description: Generate or source engaging audio
+    params:
+      genre: electronic
+      duration: 30
+      energy_level: medium
+
+  - order: 4
+    skill: captions
+    description: Add engaging captions with timing
+    params:
+      style: bold
+      position: center
+      font_size: large
+
+  - order: 5
+    skill: editing
+    description: Final editing and optimization
+    params:
+      color_grade: true
+      normalize_audio: true
+      add_intro: false
+
+constraints:
+  max_file_size_mb: 75
+  required_captions: true
+  min_brightness: 0.3
+  aspect_ratio_strict: true

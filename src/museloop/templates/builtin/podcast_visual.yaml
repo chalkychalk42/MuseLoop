@@ -1,0 +1,65 @@
+name: podcast_visual
+category: podcast
+description: Podcast visual template combining audio with dynamic images for 16:9 format
+default_style: modern
+default_skills:
+  - image_gen
+  - audio_gen
+  - editing
+  - captions
+
+duration_range: [300, 3600]
+
+export:
+  aspect_ratio: "16:9"
+  resolution: 1920x1080
+  fps: 24
+  codec: h264
+
+steps:
+  - order: 1
+    skill: image_gen
+    description: Generate topic-related background visuals
+    params:
+      model: flux
+      style: modern_minimal
+      num_images: 10
+
+  - order: 2
+    skill: audio_gen
+    description: Prepare podcast audio (recorded or generated intro)
+    params:
+      duration: 600
+      genre: podcast
+      audio_quality: high
+
+  - order: 3
+    skill: editing
+    description: Create slideshow with audio sync and transitions
+    params:
+      transition_style: fade
+      transition_duration: 5
+      add_waveform: true
+      sync_to_audio: true
+
+  - order: 4
+    skill: captions
+    description: Add chapter markers and transcription captions
+    params:
+      style: readable
+      position: bottom
+      include_timestamps: true
+
+  - order: 5
+    skill: upscale
+    description: Enhance image quality for final output
+    params:
+      scale_factor: 2
+      enhance_details: true
+
+constraints:
+  max_file_size_mb: 1000
+  audio_required: true
+  min_image_duration: 3
+  support_chapters: true
+  accessibility_captions: true

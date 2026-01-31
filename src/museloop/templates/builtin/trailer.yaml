@@ -1,0 +1,69 @@
+name: trailer
+category: cinematic
+description: Professional cinematic trailer template with 16:9 aspect ratio
+default_style: dramatic
+default_skills:
+  - flux_gen
+  - video_gen
+  - audio_gen
+  - editing
+
+duration_range: [30, 120]
+
+export:
+  aspect_ratio: "16:9"
+  resolution: 1920x1080
+  fps: 24
+  codec: h264_high_profile
+
+steps:
+  - order: 1
+    skill: flux_gen
+    description: Generate cinematic keyframes with dramatic lighting
+    params:
+      model: flux_pro
+      style: cinematic
+      lighting: dramatic
+      num_keyframes: 8
+
+  - order: 2
+    skill: img2img
+    description: Enhance and expand keyframes with motion paths
+    params:
+      enhance_resolution: true
+      add_motion_blur: true
+      strength: 0.7
+
+  - order: 3
+    skill: video_gen
+    description: Create smooth transitions between keyframes
+    params:
+      duration: 60
+      transition_style: dramatic
+      effect: cinematic_pan
+      interpolation: true
+
+  - order: 4
+    skill: audio_gen
+    description: Generate epic orchestral soundtrack
+    params:
+      genre: orchestral
+      duration: 90
+      energy_level: high
+      tempo: 120
+
+  - order: 5
+    skill: editing
+    description: Color grade, add VFX, and synchronize audio
+    params:
+      color_grade: cinematic
+      add_effects: true
+      normalize_audio: true
+      add_letterbox: true
+
+constraints:
+  max_file_size_mb: 500
+  min_frame_rate: 24
+  color_depth: 10bit_recommended
+  audio_channels: stereo
+  require_sound: true

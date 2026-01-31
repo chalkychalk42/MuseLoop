@@ -1,0 +1,71 @@
+name: music_video
+category: music
+description: Professional music video template with 16:9 aspect ratio for 60-300s tracks
+default_style: artistic
+default_skills:
+  - flux_gen
+  - video_gen
+  - img2img
+  - editing
+
+duration_range: [60, 300]
+
+export:
+  aspect_ratio: "16:9"
+  resolution: 1920x1080
+  fps: 30
+  codec: h264_high_profile
+
+steps:
+  - order: 1
+    skill: flux_gen
+    description: Generate artistic visuals for song narrative
+    params:
+      model: flux_pro
+      style: artistic
+      num_keyframes: 12
+      emotion: dynamic
+
+  - order: 2
+    skill: img2img
+    description: Enhance visuals with style transfer and details
+    params:
+      enhance_resolution: true
+      artistic_style: true
+      strength: 0.8
+
+  - order: 3
+    skill: video_gen
+    description: Create dynamic video with motion and effects
+    params:
+      duration: 180
+      transition_style: creative
+      effect: morphing
+      interpolation: true
+      quality: high
+
+  - order: 4
+    skill: editing
+    description: Sync to music, color grade, and add visual effects
+    params:
+      sync_to_beat: true
+      color_grade: cinematic
+      add_effects: true
+      normalize_audio: true
+      add_lyrics: optional
+
+  - order: 5
+    skill: upscale
+    description: Final upscaling for theatrical quality
+    params:
+      scale_factor: 2
+      enhance_details: true
+      sharpen: true
+
+constraints:
+  max_file_size_mb: 500
+  beat_sync_required: true
+  min_frame_rate: 24
+  audio_channels: stereo
+  color_depth: 10bit_recommended
+  artistic_quality: high

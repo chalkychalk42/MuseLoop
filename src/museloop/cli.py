@@ -22,18 +22,41 @@ console = Console()
 
 @app.command()
 def run(
-    brief: str = typer.Argument(..., help="Path to brief JSON file"),
+    brief: str = typer.Argument(..., help="Path to brief JSON file or task description"),
     output_dir: str = typer.Option("./output", "--output-dir", "-o", help="Output directory"),
     max_iterations: int = typer.Option(5, "--max-iterations", "-n", help="Max loop iterations"),
     threshold: float = typer.Option(0.7, "--threshold", "-t", help="Quality score to accept"),
+    template: Optional[str] = typer.Option(None, "--template", help="Workflow template name"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Plan only, skip generation"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
 ) -> None:
-    """Execute a creative pipeline from a brief file."""
+    """Execute a creative pipeline from a brief file or template."""
+    import json
+
     from museloop.config import MuseLoopConfig
     from museloop.utils.logging import setup_logging
 
     setup_logging(verbose=verbose)
+
+    # If --template is used, generate a brief from template + task description
+    if template:
+        from museloop.templates.registry import TemplateRegistry
+
+        reg = TemplateRegistry()
+        reg.discover()
+        if not reg.has(template):
+            console.print(f"[red]Error:[/red] Template '{template}' not found.")
+            console.print(f"Available: {', '.join(reg.list_templates())}")
+            raise typer.Exit(1)
+
+        tmpl = reg.get(template)
+        brief_dict = tmpl.to_brief(task=brief)
+        import tempfile
+
+        brief_file = Path(tempfile.mktemp(suffix=".json"))
+        brief_file.write_text(json.dumps(brief_dict))
+        brief = str(brief_file)
+        console.print(f"[dim]Using template: {template}[/dim]")
 
     # Validate brief exists
     brief_path = Path(brief)
@@ -214,6 +237,46 @@ def dashboard(
     config = MuseLoopConfig()
     app_instance = create_app(config)
     uvicorn.run(app_instance, host=host, port=port, log_level="info")
+
+
+@app.command()
+def templates(
+    name: Optional[str] = typer.Argument(None, help="Template name to inspect"),
+) -> None:
+    """List workflow templates or inspect a specific one."""
+    from museloop.templates.registry import TemplateRegistry
+
+    reg = TemplateRegistry()
+    reg.discover()
+
+    if name:
+        if not reg.has(name):
+            console.print(f"[red]Template '{name}' not found.[/red]")
+            raise typer.Exit(1)
+        tmpl = reg.get(name)
+        console.print(f"\n[bold]{tmpl.name}[/bold] ({tmpl.category})")
+        console.print(f"  {tmpl.description}")
+        console.print(f"  Style: {tmpl.default_style or 'none'}")
+        console.print(f"  Duration: {tmpl.duration_range[0]}-{tmpl.duration_range[1]}s")
+        console.print(f"  Export: {tmpl.export.aspect_ratio} @ {tmpl.export.resolution}")
+        console.print(f"  Skills: {', '.join(tmpl.default_skills)}")
+        if tmpl.steps:
+            console.print(f"\n  Steps:")
+            for step in tmpl.steps:
+                console.print(f"    {step.order}. [{step.skill}] {step.description}")
+    else:
+        details = reg.list_details()
+        if not details:
+            console.print("[yellow]No templates found. Install pyyaml for template support.[/yellow]")
+            return
+
+        table = Table(title="Workflow Templates")
+        table.add_column("Name", style="cyan")
+        table.add_column("Category")
+        table.add_column("Description")
+        for t in details:
+            table.add_row(t["name"], t["category"], t["description"])
+        console.print(table)
 
 
 @app.command()
