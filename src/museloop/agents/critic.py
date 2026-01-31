@@ -7,13 +7,14 @@ from typing import Any
 
 from museloop.agents.base import BaseAgent, logger
 from museloop.core.state import LoopState
+from museloop.llm.base import LLMBackend
 
 
 class CriticAgent(BaseAgent):
     agent_name = "critic"
     prompt_file = "critic_agent.md"
 
-    def __init__(self, llm: Any, prompts_dir: str, quality_threshold: float = 0.7):
+    def __init__(self, llm: LLMBackend, prompts_dir: str, quality_threshold: float = 0.7):
         super().__init__(llm, prompts_dir)
         self.quality_threshold = quality_threshold
 
@@ -92,7 +93,7 @@ Set "pass" to true if score >= {self.quality_threshold}.
                     }
                 ],
             }
-        except (json.JSONDecodeError, Exception) as e:
+        except (json.JSONDecodeError, ValueError, KeyError) as e:
             logger.error("critic_agent_error", error=str(e))
             return {
                 "critique": {

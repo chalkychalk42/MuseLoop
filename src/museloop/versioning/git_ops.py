@@ -70,6 +70,16 @@ class GitOps:
             logger.warning("git_commit_failed", iteration=iteration, error=str(e))
             return None
 
+    def tag(self, tag_name: str, message: str | None = None) -> None:
+        """Create a git tag at the current HEAD."""
+        if self._repo is None:
+            return
+        try:
+            self._repo.create_tag(tag_name, message=message or tag_name)
+            logger.info("git_tagged", tag=tag_name)
+        except Exception as e:
+            logger.warning("git_tag_failed", tag=tag_name, error=str(e))
+
     def get_history(self) -> list[dict[str, Any]]:
         """Return the git log as a list of dicts."""
         if self._repo is None:

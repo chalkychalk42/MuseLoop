@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import subprocess
+import re
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +14,14 @@ from museloop.utils.logging import get_logger
 from museloop.utils.retry import retry_generation
 
 logger = get_logger(__name__)
+
+
+def _sanitize_drawtext(text: str) -> str:
+    """Escape text for safe use in ffmpeg drawtext filter."""
+    # Remove characters that have special meaning in ffmpeg filters
+    text = re.sub(r"[':;\\]", "", text)
+    # Limit length to prevent abuse
+    return text[:80]
 
 
 class VideoGenSkill(BaseSkill):
@@ -123,11 +131,12 @@ class VideoGenSkill(BaseSkill):
             duration = input.params.get("duration", 5)
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
+            safe_text = _sanitize_drawtext(input.prompt)
             cmd = [
                 "ffmpeg", "-y",
                 "-f", "lavfi",
                 "-i", f"color=c=0x1e1e28:s=1280x720:d={duration}",
-                "-vf", f"drawtext=text='[MuseLoop Placeholder]\\n{input.prompt[:60]}'"
+                "-vf", f"drawtext=text='[MuseLoop Placeholder]\\n{safe_text}'"
                        ":fontcolor=white:fontsize=24:x=(w-tw)/2:y=(h-th)/2",
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",

@@ -12,6 +12,25 @@ from museloop.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+# Allowed file extensions for media inputs
+_ALLOWED_EXTENSIONS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".mp3", ".wav", ".aac", ".flac", ".ogg", ".png", ".jpg"}
+
+
+def _validate_media_path(path: str, output_dir: str | None = None) -> Path:
+    """Validate that a media path is safe (no traversal, valid extension)."""
+    p = Path(path).resolve()
+    if ".." in p.parts:
+        raise ValueError(f"Path traversal detected: {path}")
+    if p.suffix.lower() not in _ALLOWED_EXTENSIONS:
+        raise ValueError(f"Disallowed file extension: {p.suffix}")
+    if output_dir:
+        out = Path(output_dir).resolve()
+        # Input files must be under the output directory or an absolute path
+        # that doesn't escape the filesystem root
+        if not (str(p).startswith(str(out)) or p.is_absolute()):
+            raise ValueError(f"Path outside allowed directory: {path}")
+    return p
+
 
 class EditingSkill(BaseSkill):
     name = "editing"
@@ -39,11 +58,17 @@ class EditingSkill(BaseSkill):
         if not input_files:
             return SkillOutput(success=False, error="No input files for concatenation")
 
+        # Validate all input paths
+        try:
+            validated = [_validate_media_path(f) for f in input_files]
+        except ValueError as e:
+            return SkillOutput(success=False, error=str(e))
+
         # Create concat file list
         concat_path = Path(output_path).parent / "concat_list.txt"
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         with open(concat_path, "w") as f:
-            for file in input_files:
+            for file in validated:
                 f.write(f"file '{file}'\n")
 
         cmd = [
@@ -63,6 +88,12 @@ class EditingSkill(BaseSkill):
         audio_path = input.params.get("audio_path", "")
         if not video_path or not audio_path:
             return SkillOutput(success=False, error="Both video_path and audio_path required")
+
+        try:
+            video_path = str(_validate_media_path(video_path))
+            audio_path = str(_validate_media_path(audio_path))
+        except ValueError as e:
+            return SkillOutput(success=False, error=str(e))
 
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         cmd = [
@@ -86,6 +117,11 @@ class EditingSkill(BaseSkill):
         if not input_file:
             return SkillOutput(success=False, error="input_file required for trim")
 
+        try:
+            input_file = str(_validate_media_path(input_file))
+        except ValueError as e:
+            return SkillOutput(success=False, error=str(e))
+
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         cmd = [
             "ffmpeg", "-y",
@@ -103,6 +139,11 @@ class EditingSkill(BaseSkill):
         input_file = input.params.get("input_file", "")
         if not input_file:
             return SkillOutput(success=False, error="input_file required for convert")
+
+        try:
+            input_file = str(_validate_media_path(input_file))
+        except ValueError as e:
+            return SkillOutput(success=False, error=str(e))
 
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         cmd = [

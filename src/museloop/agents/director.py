@@ -8,18 +8,30 @@ from typing import Any
 
 from museloop.agents.base import BaseAgent, logger
 from museloop.core.state import LoopState
+from museloop.llm.base import LLMBackend
 from museloop.skills.registry import SkillRegistry
 from museloop.utils.file_io import asset_path
+
+# Limit concurrent skill executions to prevent resource exhaustion
+_DEFAULT_MAX_CONCURRENT = 4
 
 
 class DirectorAgent(BaseAgent):
     agent_name = "director"
     prompt_file = "director_agent.md"
 
-    def __init__(self, llm: Any, prompts_dir: str, registry: SkillRegistry, output_dir: str):
+    def __init__(
+        self,
+        llm: LLMBackend,
+        prompts_dir: str,
+        registry: SkillRegistry,
+        output_dir: str,
+        max_concurrent: int = _DEFAULT_MAX_CONCURRENT,
+    ):
         super().__init__(llm, prompts_dir)
         self.registry = registry
         self.output_dir = output_dir
+        self._semaphore = asyncio.Semaphore(max_concurrent)
 
     async def run(self, state: LoopState) -> dict[str, Any]:
         logger.info("director_agent_start", iteration=state["iteration"])
@@ -87,7 +99,12 @@ class DirectorAgent(BaseAgent):
         }
 
     async def _execute_task(self, task: dict[str, Any], iteration: int) -> dict[str, Any]:
-        """Execute a single task using the appropriate skill."""
+        """Execute a single task using the appropriate skill (with concurrency limit)."""
+        async with self._semaphore:
+            return await self._execute_task_inner(task, iteration)
+
+    async def _execute_task_inner(self, task: dict[str, Any], iteration: int) -> dict[str, Any]:
+        """Inner task execution logic."""
         from museloop.skills.base import SkillInput
 
         skill_name = task["skill"]

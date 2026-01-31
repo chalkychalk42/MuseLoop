@@ -20,4 +20,9 @@ COPY src/ src/
 COPY prompts/ prompts/
 COPY examples/ examples/
 
+# Run as non-root user
+RUN useradd --create-home --shell /bin/bash museloop \
+    && chown -R museloop:museloop /app
+USER museloop
+
 ENTRYPOINT ["uv", "run", "museloop"]

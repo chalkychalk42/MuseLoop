@@ -67,6 +67,7 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
 
     best_score = 0.0
     best_iteration = 0
+    best_state: dict[str, Any] | None = None
     all_assets: list[dict[str, Any]] = []
 
     for i in range(config.max_iterations):
@@ -103,11 +104,12 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
         # Git commit this iteration's outputs
         git.commit_iteration(i + 1, iteration_assets)
 
-        # Track best iteration
+        # Track best iteration (snapshot state for potential restore)
         score = state.get("critique", {}).get("score", 0.0)
         if score > best_score:
             best_score = score
             best_iteration = i + 1
+            best_state = {k: v for k, v in state.items() if k != "messages"}
 
         # Check if CriticAgent accepted
         if state.get("critique", {}).get("pass", False):
@@ -124,6 +126,15 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
             score=score,
             passed=False,
         )
+
+    # If the loop exhausted iterations without passing, restore best state
+    if not state.get("critique", {}).get("pass", False) and best_state:
+        logger.info(
+            "restoring_best_iteration",
+            best_iteration=best_iteration,
+            best_score=best_score,
+        )
+        git.tag(f"best-v{best_iteration}")
 
     state["status"] = "complete"
     logger.info(
