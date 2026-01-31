@@ -1,0 +1,12 @@
+{
+    "task": "Generate a music visualization video with AI-generated visuals",
+    "style": "abstract, flowing, colorful",
+    "duration_seconds": 60,
+    "skills_required": ["audio_gen", "image_gen", "video_gen", "editing"],
+    "constraints": {
+        "aspect_ratio": "16:9",
+        "resolution": "1280x720",
+        "genre": "electronic ambient"
+    },
+    "reference_assets": []
+}

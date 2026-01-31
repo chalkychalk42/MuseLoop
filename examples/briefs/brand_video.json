@@ -1,0 +1,12 @@
+{
+    "task": "Create a 15-second brand promotional video for a tech startup",
+    "style": "modern, clean, minimal",
+    "duration_seconds": 15,
+    "skills_required": ["image_gen", "audio_gen", "editing"],
+    "constraints": {
+        "aspect_ratio": "16:9",
+        "resolution": "1920x1080",
+        "tone": "energetic, professional, innovative"
+    },
+    "reference_assets": []
+}

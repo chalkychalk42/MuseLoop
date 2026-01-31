@@ -1,0 +1,31 @@
+services:
+  museloop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./output:/app/output
+      - ./.env:/app/.env:ro
+    depends_on:
+      - comfyui
+    environment:
+      - MUSELOOP_COMFYUI_URL=http://comfyui:8188
+    command: ["run", "examples/briefs/sci_fi_trailer.json"]
+
+  comfyui:
+    image: ghcr.io/ai-dock/comfyui:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8188:8188"
+    volumes:
+      - comfyui-models:/opt/ComfyUI/models
+      - ./examples/workflows:/opt/ComfyUI/user/workflows
+
+volumes:
+  comfyui-models:

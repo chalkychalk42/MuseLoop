@@ -1,0 +1,17 @@
+{
+    "name": "editing",
+    "description": "Post-processing via FFmpeg: trim, concatenate, overlay audio, format conversion",
+    "module": "museloop.skills.editing",
+    "class": "EditingSkill",
+    "inputs": {
+        "operation": "string",
+        "input_files": "list",
+        "video_path": "string",
+        "audio_path": "string"
+    },
+    "outputs": {
+        "output_path": "string"
+    },
+    "requires_gpu": false,
+    "fallback": null
+}

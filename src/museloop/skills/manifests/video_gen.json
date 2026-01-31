@@ -1,0 +1,17 @@
+{
+    "name": "video_gen",
+    "description": "Generate videos via local models (Wan2.2/CogVideo) or Replicate API",
+    "module": "museloop.skills.video_gen",
+    "class": "VideoGenSkill",
+    "inputs": {
+        "prompt": "string",
+        "num_frames": "int",
+        "fps": "int",
+        "duration": "int"
+    },
+    "outputs": {
+        "video_path": "string"
+    },
+    "requires_gpu": true,
+    "fallback": "replicate"
+}

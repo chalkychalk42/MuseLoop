@@ -1,0 +1,17 @@
+{
+    "name": "image_gen",
+    "description": "Generate images via Stable Diffusion (ComfyUI) or Replicate API",
+    "module": "museloop.skills.image_gen",
+    "class": "ImageGenSkill",
+    "inputs": {
+        "prompt": "string",
+        "negative_prompt": "string",
+        "width": "int",
+        "height": "int"
+    },
+    "outputs": {
+        "image_path": "string"
+    },
+    "requires_gpu": true,
+    "fallback": "replicate"
+}

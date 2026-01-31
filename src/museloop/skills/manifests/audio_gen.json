@@ -1,0 +1,16 @@
+{
+    "name": "audio_gen",
+    "description": "Generate audio/music via AudioCraft (MusicGen) or Replicate API",
+    "module": "museloop.skills.audio_gen",
+    "class": "AudioGenSkill",
+    "inputs": {
+        "prompt": "string",
+        "duration": "int",
+        "temperature": "float"
+    },
+    "outputs": {
+        "audio_path": "string"
+    },
+    "requires_gpu": true,
+    "fallback": "replicate"
+}

@@ -1,0 +1,12 @@
+{
+    "task": "Create a 30-second sci-fi movie trailer",
+    "style": "cyberpunk",
+    "duration_seconds": 30,
+    "skills_required": ["image_gen", "video_gen", "audio_gen", "editing"],
+    "constraints": {
+        "aspect_ratio": "16:9",
+        "resolution": "1920x1080",
+        "tone": "dark, atmospheric, neon-lit"
+    },
+    "reference_assets": []
+}
