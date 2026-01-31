@@ -37,3 +37,14 @@ class LoopState(TypedDict):
 
     # Current status
     status: str  # "planning" | "generating" | "critiquing" | "revising" | "complete"
+
+    # --- Conditional flow fields ---
+
+    # Director retry counter (for conditional retry on empty assets)
+    director_retries: int
+
+    # Human-in-the-loop approval result
+    human_approval: dict[str, Any] | None
+
+    # Error info for routing decisions
+    last_error: str

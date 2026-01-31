@@ -30,3 +30,18 @@ class LLMBackend(Protocol):
     ) -> AsyncIterator[str]:
         """Streaming completion. Yields text chunks."""
         ...
+
+    async def generate_with_images(
+        self,
+        system_prompt: str,
+        user_message: str,
+        image_paths: list[str],
+        *,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+    ) -> str:
+        """Completion with image attachments for vision models.
+
+        Backends that don't support vision should fall back to text-only generate().
+        """
+        ...

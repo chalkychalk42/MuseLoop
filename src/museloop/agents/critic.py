@@ -8,6 +8,7 @@ from typing import Any
 from museloop.agents.base import BaseAgent, logger
 from museloop.core.state import LoopState
 from museloop.llm.base import LLMBackend
+from museloop.utils.vision import get_image_paths_from_assets
 
 
 class CriticAgent(BaseAgent):
@@ -54,6 +55,17 @@ class CriticAgent(BaseAgent):
                 "metadata": asset.get("metadata", {}),
             })
 
+        # Extract image paths for visual critique
+        image_paths = get_image_paths_from_assets(assets)
+        use_vision = len(image_paths) > 0
+
+        vision_note = ""
+        if use_vision:
+            vision_note = (
+                f"\n\nIMPORTANT: {len(image_paths)} image(s) are attached for visual analysis. "
+                "Evaluate their visual quality, composition, style adherence, and coherence."
+            )
+
         user_message = f"""
 Evaluate these generated assets against the original brief.
 
@@ -64,11 +76,15 @@ Iteration: {iteration}
 Quality threshold: {self.quality_threshold}
 
 Score from 0.0 to 1.0 and provide detailed feedback.
-Set "pass" to true if score >= {self.quality_threshold}.
+Set "pass" to true if score >= {self.quality_threshold}.{vision_note}
 """
 
         try:
-            result = await self._call_llm_json(user_message)
+            if use_vision:
+                logger.info("critic_using_vision", image_count=len(image_paths))
+                result = await self._call_llm_json_with_images(user_message, image_paths)
+            else:
+                result = await self._call_llm_json(user_message)
             score = float(result.get("score", 0.0))
             result["score"] = score
             result["pass"] = score >= self.quality_threshold

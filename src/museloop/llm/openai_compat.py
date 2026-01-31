@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import AsyncIterator
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAICompatBackend:
@@ -97,3 +100,19 @@ class OpenAICompatBackend:
                             yield content
                     except (json.JSONDecodeError, KeyError, IndexError):
                         continue
+
+    async def generate_with_images(
+        self,
+        system_prompt: str,
+        user_message: str,
+        image_paths: list[str],
+        *,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+    ) -> str:
+        """Vision not supported — falls back to text-only generate()."""
+        logger.warning("OpenAI-compat backend does not support vision; falling back to text-only")
+        return await self.generate(
+            system_prompt, user_message,
+            max_tokens=max_tokens, temperature=temperature,
+        )

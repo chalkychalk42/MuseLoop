@@ -26,6 +26,7 @@ class MuseLoopConfig(BaseSettings):
     # Loop behavior
     max_iterations: int = 5
     quality_threshold: float = 0.7
+    human_in_loop: bool = False
 
     # Paths
     output_dir: str = "./output"

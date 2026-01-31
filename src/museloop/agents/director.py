@@ -87,6 +87,7 @@ class DirectorAgent(BaseAgent):
         return {
             "assets": assets,
             "status": "critiquing",
+            "director_retries": state.get("director_retries", 0) + (0 if assets else 1),
             "messages": [
                 {
                     "role": "assistant",

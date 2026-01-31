@@ -61,6 +61,7 @@ def mock_llm_for_graph():
         return "{}"
 
     llm.generate = smart_generate
+    llm.generate_with_images = smart_generate
     return llm
 
 
@@ -83,6 +84,9 @@ async def test_graph_full_pass(mock_llm_for_graph, mock_registry, config):
         "messages": [],
         "memory": {},
         "status": "planning",
+        "director_retries": 0,
+        "human_approval": None,
+        "last_error": "",
     }
 
     result = await graph.ainvoke(initial_state)

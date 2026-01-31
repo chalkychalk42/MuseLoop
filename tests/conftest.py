@@ -17,9 +17,9 @@ from museloop.skills.registry import SkillRegistry
 def mock_llm() -> AsyncMock:
     """Returns a mock LLM that returns predictable JSON responses."""
     llm = AsyncMock(spec=LLMBackend)
-    llm.generate = AsyncMock(
-        return_value='{"plan": [{"step": 1, "task": "test image", "skill": "image_gen", "params": {"prompt": "test"}}], "script": "A test script"}'
-    )
+    default_response = '{"plan": [{"step": 1, "task": "test image", "skill": "image_gen", "params": {"prompt": "test"}}], "script": "A test script"}'
+    llm.generate = AsyncMock(return_value=default_response)
+    llm.generate_with_images = AsyncMock(return_value=default_response)
     return llm
 
 

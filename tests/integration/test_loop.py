@@ -61,6 +61,7 @@ async def test_loop_completes(sample_brief_path, config, mock_llm_responses):
     """Test that the loop runs to completion with mocked LLM."""
     mock_llm = AsyncMock()
     mock_llm.generate = mock_llm_responses
+    mock_llm.generate_with_images = mock_llm_responses
 
     with patch("museloop.core.loop.get_llm_backend", return_value=mock_llm):
         result_path = await run_loop(str(sample_brief_path), config)

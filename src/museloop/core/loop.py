@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from museloop.config import MuseLoopConfig
 from museloop.core.brief import Brief
@@ -20,18 +20,40 @@ logger = get_logger(__name__)
 # Maximum time (seconds) for a single graph invocation before timeout
 GRAPH_TIMEOUT_SECONDS = 600
 
+# Event callback type: receives (event_name, event_data)
+EventCallback = Callable[[str, dict[str, Any]], None]
 
-async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
+
+def _emit(on_event: EventCallback | None, event: str, data: dict[str, Any]) -> None:
+    """Safely emit an event if a callback is registered."""
+    if on_event:
+        try:
+            on_event(event, data)
+        except Exception:
+            pass  # Never let callback errors break the loop
+
+
+async def run_loop(
+    brief_path: str,
+    config: MuseLoopConfig,
+    on_event: EventCallback | None = None,
+) -> Path:
     """Main entry point. Runs the full agentic loop.
 
     1. Load brief
     2. Initialize LLM, skills, graph, git
     3. Iterate: invoke graph → commit → check quality → repeat or stop
     4. Return output directory path
+
+    Args:
+        brief_path: Path to the brief JSON file.
+        config: MuseLoop configuration.
+        on_event: Optional callback for progress events (used by CLI TUI, Web, MCP).
     """
     # Load and validate the brief
     brief = Brief.from_file(brief_path)
     logger.info("brief_loaded", task=brief.task, style=brief.style)
+    _emit(on_event, "brief_loaded", {"task": brief.task, "style": brief.style})
 
     # Initialize components
     llm = get_llm_backend(config)
@@ -46,6 +68,7 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
     logger.info(
         "skills_discovered", count=len(registry.list_skills()), skills=registry.list_skills()
     )
+    _emit(on_event, "skills_discovered", {"skills": registry.list_skills()})
 
     graph = build_graph(llm=llm, registry=registry, config=config)
 
@@ -53,7 +76,7 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
     git = GitOps(output_path)
     git.init()
 
-    # Initialize state
+    # Initialize state with conditional flow fields
     state: dict[str, Any] = {
         "brief": brief.model_dump(),
         "iteration": 0,
@@ -63,6 +86,10 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
         "messages": [],
         "memory": {},
         "status": "planning",
+        # Conditional flow fields
+        "director_retries": 0,
+        "human_approval": None,
+        "last_error": "",
     }
 
     best_score = 0.0
@@ -72,7 +99,15 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
 
     for i in range(config.max_iterations):
         state["iteration"] = i + 1
+        # Reset per-iteration conditional fields
+        state["director_retries"] = 0
+        state["human_approval"] = None
+
         logger.info("iteration_start", iteration=state["iteration"])
+        _emit(on_event, "iteration_start", {
+            "iteration": state["iteration"],
+            "max_iterations": config.max_iterations,
+        })
 
         # Run the LangGraph graph with timeout protection
         try:
@@ -85,6 +120,7 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
                 iteration=state["iteration"],
                 timeout=GRAPH_TIMEOUT_SECONDS,
             )
+            _emit(on_event, "iteration_timeout", {"iteration": state["iteration"]})
             continue
 
         if not isinstance(result, dict):
@@ -110,6 +146,14 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
             best_score = score
             best_iteration = i + 1
             best_state = {k: v for k, v in state.items() if k != "messages"}
+
+        _emit(on_event, "iteration_complete", {
+            "iteration": state["iteration"],
+            "score": score,
+            "passed": state.get("critique", {}).get("pass", False),
+            "asset_count": len(iteration_assets),
+            "best_score": best_score,
+        })
 
         # Check if CriticAgent accepted
         if state.get("critique", {}).get("pass", False):
@@ -144,5 +188,11 @@ async def run_loop(brief_path: str, config: MuseLoopConfig) -> Path:
         best_iteration=best_iteration,
         total_assets=len(all_assets),
     )
+    _emit(on_event, "loop_complete", {
+        "total_iterations": state["iteration"],
+        "best_score": best_score,
+        "best_iteration": best_iteration,
+        "total_assets": len(all_assets),
+    })
 
     return output_path

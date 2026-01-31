@@ -56,6 +56,24 @@ class BaseAgent(ABC):
         response = await self._call_llm(user_message, **kwargs)
         return self._parse_json_response(response)
 
+    async def _call_llm_with_images(
+        self, user_message: str, image_paths: list[str], **kwargs: Any
+    ) -> str:
+        """Call the LLM with image attachments (for vision-capable models)."""
+        return await self.llm.generate_with_images(
+            system_prompt=self.system_prompt,
+            user_message=user_message,
+            image_paths=image_paths,
+            **kwargs,
+        )
+
+    async def _call_llm_json_with_images(
+        self, user_message: str, image_paths: list[str], **kwargs: Any
+    ) -> dict[str, Any]:
+        """Call the LLM with images and parse the response as JSON."""
+        response = await self._call_llm_with_images(user_message, image_paths, **kwargs)
+        return self._parse_json_response(response)
+
     @staticmethod
     def _parse_json_response(response: str) -> dict[str, Any]:
         """Extract and parse JSON from an LLM response string."""
