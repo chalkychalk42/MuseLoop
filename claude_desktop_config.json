@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "museloop": {
+      "command": "museloop",
+      "args": ["serve", "--transport", "stdio"],
+      "env": {
+        "MUSELOOP_ANTHROPIC_API_KEY": "your-api-key-here",
+        "MUSELOOP_OUTPUT_DIR": "./output",
+        "MUSELOOP_LLM_BACKEND": "claude"
+      }
+    }
+  }
+}

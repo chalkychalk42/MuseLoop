@@ -154,6 +154,31 @@ def history(
 
 
 @app.command()
+def serve(
+    transport: str = typer.Option("stdio", "--transport", "-T", help="MCP transport (stdio)"),
+) -> None:
+    """Start the MCP server for Claude Desktop/Code integration."""
+    try:
+        from museloop.mcp.server import init_handlers, run_server
+    except ImportError:
+        console.print(
+            "[red]Error:[/red] MCP dependencies not installed. "
+            "Install with: [cyan]uv pip install 'museloop[mcp]'[/cyan]"
+        )
+        raise typer.Exit(1)
+
+    from museloop.config import MuseLoopConfig
+
+    console.print(f"[bold cyan]MuseLoop MCP Server v{__version__}[/bold cyan]")
+    console.print(f"Transport: {transport}")
+    console.print("Waiting for connections...\n", style="dim")
+
+    config = MuseLoopConfig()
+    init_handlers(config)
+    run_server()
+
+
+@app.command()
 def version() -> None:
     """Show MuseLoop version."""
     console.print(f"MuseLoop v{__version__}")

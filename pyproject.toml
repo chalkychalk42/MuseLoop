@@ -33,6 +33,9 @@ gpu = [
 remotion = [
     # Remotion requires Node.js installed separately (npm/npx)
 ]
+mcp = [
+    "mcp[cli]>=1.0.0",
+]
 
 [dependency-groups]
 dev = [
