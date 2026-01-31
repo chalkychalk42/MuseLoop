@@ -1,0 +1,16 @@
+{
+    "name": "upscale",
+    "description": "Upscale images via Real-ESRGAN or Replicate",
+    "module": "museloop.skills.upscale",
+    "class": "UpscaleSkill",
+    "inputs": {
+        "source_image": "string",
+        "scale": "int",
+        "face_enhance": "boolean"
+    },
+    "outputs": {
+        "image_path": "string"
+    },
+    "requires_gpu": false,
+    "fallback": "pil_lanczos"
+}

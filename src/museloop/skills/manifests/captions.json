@@ -1,0 +1,16 @@
+{
+    "name": "captions",
+    "description": "Generate captions/subtitles from audio/video via Whisper",
+    "module": "museloop.skills.captions",
+    "class": "CaptionsSkill",
+    "inputs": {
+        "source_media": "string",
+        "model_size": "string",
+        "burn_in": "boolean"
+    },
+    "outputs": {
+        "srt_path": "string"
+    },
+    "requires_gpu": false,
+    "fallback": "replicate"
+}

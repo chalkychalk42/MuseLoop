@@ -1,0 +1,16 @@
+{
+    "name": "tts",
+    "description": "Text-to-speech audio generation via Bark or Replicate",
+    "module": "museloop.skills.tts",
+    "class": "TTSSkill",
+    "inputs": {
+        "prompt": "string",
+        "voice_preset": "string",
+        "temperature": "float"
+    },
+    "outputs": {
+        "audio_path": "string"
+    },
+    "requires_gpu": true,
+    "fallback": "replicate"
+}

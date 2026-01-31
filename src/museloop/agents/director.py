@@ -120,7 +120,12 @@ class DirectorAgent(BaseAgent):
 
         # Determine output path
         step = task.get("step", 0)
-        ext_map = {"image_gen": "png", "video_gen": "mp4", "audio_gen": "wav", "editing": "mp4"}
+        ext_map = {
+            "image_gen": "png", "flux_gen": "png", "img2img": "png", "upscale": "png",
+            "video_gen": "mp4", "editing": "mp4",
+            "audio_gen": "wav", "tts": "wav",
+            "captions": "srt",
+        }
         ext = ext_map.get(skill_name, "bin")
         output_path = asset_path(self.output_dir, iteration, f"step-{step:03d}-{skill_name}", ext)
 

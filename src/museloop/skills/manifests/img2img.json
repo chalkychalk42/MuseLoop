@@ -1,0 +1,17 @@
+{
+    "name": "img2img",
+    "description": "Image-to-image transformation and style transfer",
+    "module": "museloop.skills.img2img",
+    "class": "Img2ImgSkill",
+    "inputs": {
+        "prompt": "string",
+        "source_image": "string",
+        "strength": "float",
+        "negative_prompt": "string"
+    },
+    "outputs": {
+        "image_path": "string"
+    },
+    "requires_gpu": false,
+    "fallback": "replicate"
+}
