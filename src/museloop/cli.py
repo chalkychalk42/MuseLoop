@@ -56,17 +56,28 @@ def run(
         console.print(f"\n[dim]Dry run — no generation performed.[/dim]")
         return
 
-    console.print(f"\n[bold cyan]MuseLoop v{__version__}[/bold cyan]")
-    console.print(f"Brief: {brief_path}")
-    console.print(f"Output: {output_dir}")
-    console.print(f"Max iterations: {max_iterations}")
-    console.print(f"Quality threshold: {threshold}")
-    console.print()
-
     from museloop.core.loop import run_loop
 
-    result_path = asyncio.run(run_loop(str(brief_path), config))
-    console.print(f"\n[green bold]Done![/green bold] Output at: {result_path}")
+    if verbose:
+        # Rich TUI mode with live progress display
+        from museloop.ui.progress import PipelineProgress
+
+        progress = PipelineProgress()
+        with progress:
+            result_path = asyncio.run(
+                run_loop(str(brief_path), config, on_event=progress.on_event)
+            )
+        console.print(f"\n[green bold]Done![/green bold] Output at: {result_path}")
+    else:
+        # Simple output mode
+        console.print(f"\n[bold cyan]MuseLoop v{__version__}[/bold cyan]")
+        console.print(f"Brief: {brief_path}")
+        console.print(f"Output: {output_dir}")
+        console.print(f"Max iterations: {max_iterations}")
+        console.print(f"Quality threshold: {threshold}")
+        console.print()
+        result_path = asyncio.run(run_loop(str(brief_path), config))
+        console.print(f"\n[green bold]Done![/green bold] Output at: {result_path}")
 
 
 @app.command()
