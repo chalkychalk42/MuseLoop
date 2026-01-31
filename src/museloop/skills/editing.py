@@ -18,16 +18,16 @@ _ALLOWED_EXTENSIONS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".mp3", ".wav", 
 
 def _validate_media_path(path: str, output_dir: str | None = None) -> Path:
     """Validate that a media path is safe (no traversal, valid extension)."""
-    p = Path(path).resolve()
-    if ".." in p.parts:
+    # Check for traversal BEFORE resolving (resolve normalizes ".." away)
+    raw = Path(path)
+    if ".." in raw.parts:
         raise ValueError(f"Path traversal detected: {path}")
+    p = raw.resolve()
     if p.suffix.lower() not in _ALLOWED_EXTENSIONS:
         raise ValueError(f"Disallowed file extension: {p.suffix}")
     if output_dir:
         out = Path(output_dir).resolve()
-        # Input files must be under the output directory or an absolute path
-        # that doesn't escape the filesystem root
-        if not (str(p).startswith(str(out)) or p.is_absolute()):
+        if not str(p).startswith(str(out)):
             raise ValueError(f"Path outside allowed directory: {path}")
     return p
 
