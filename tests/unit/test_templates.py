@@ -63,7 +63,7 @@ class TestTemplateRegistry:
         reg = TemplateRegistry()
         reg.discover()
         names = reg.list_templates()
-        assert len(names) == 7
+        assert len(names) == 10
         assert "tiktok_vertical" in names
         assert "youtube_shorts" in names
         assert "trailer" in names
@@ -71,6 +71,9 @@ class TestTemplateRegistry:
         assert "podcast_visual" in names
         assert "music_video" in names
         assert "social_carousel" in names
+        assert "memecoin_launch" in names
+        assert "memecoin_social" in names
+        assert "memecoin_video" in names
 
     def test_get_template(self):
         reg = TemplateRegistry()
@@ -95,7 +98,7 @@ class TestTemplateRegistry:
         reg = TemplateRegistry()
         reg.discover()
         details = reg.list_details()
-        assert len(details) == 7
+        assert len(details) == 10
         for d in details:
             assert "name" in d
             assert "category" in d

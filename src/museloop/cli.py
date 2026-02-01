@@ -330,6 +330,86 @@ def export_cmd(
 
 
 @app.command()
+def memecoin(
+    name: str = typer.Argument(..., help="Token name (e.g., 'DogWifHat')"),
+    ticker: str = typer.Argument(..., help="Ticker symbol (e.g., 'WIF')"),
+    concept: str = typer.Option("", "--concept", "-c", help="What's the coin about?"),
+    vibe: str = typer.Option("degen", "--vibe", help="Aesthetic: degen, cute, dark, neon, retro"),
+    chain: str = typer.Option("SOL", "--chain", help="Blockchain: SOL, ETH, BASE"),
+    tagline: str = typer.Option("", "--tagline", help="Project tagline"),
+    output_dir: str = typer.Option("./output", "--output-dir", "-o", help="Output directory"),
+    assets: Optional[str] = typer.Option(None, "--assets", help="Comma-separated asset names"),
+    brief_only: bool = typer.Option(False, "--brief-only", help="Generate brief JSON only"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable Rich TUI"),
+) -> None:
+    """Generate a full memecoin content kit — logos, banners, memes, everything.
+
+    Examples:
+      museloop memecoin "DogWifHat" "WIF" --concept "A dog wearing a hat" --vibe degen
+      museloop memecoin "PepeCoin" "PEPE" --vibe retro --chain ETH
+      museloop memecoin "MoonCat" "MCAT" --assets token_logo,dexscreener_banner
+    """
+    from museloop.memecoin.generator import ASSET_SPECS, TokenMeta, write_brief
+
+    token = TokenMeta(
+        name=name,
+        ticker=ticker,
+        concept=concept,
+        vibe=vibe,
+        chain=chain,
+        tagline=tagline,
+    )
+
+    asset_list = assets.split(",") if assets else None
+
+    console.print(f"\n[bold magenta]MuseLoop Memecoin Kit[/bold magenta]")
+    console.print(f"  Token: {name} (${ticker})")
+    console.print(f"  Chain: {chain}")
+    console.print(f"  Vibe: {vibe}")
+    if concept:
+        console.print(f"  Concept: {concept}")
+
+    # Show what will be generated
+    specs = ASSET_SPECS if not asset_list else {k: v for k, v in ASSET_SPECS.items() if k in asset_list}
+    console.print(f"\n  Assets to generate ({len(specs)}):")
+    for asset_name in specs:
+        console.print(f"    [cyan]{asset_name}[/cyan]")
+
+    brief_path = write_brief(token, output_dir, asset_list)
+    console.print(f"\n  Brief: {brief_path}")
+
+    if brief_only:
+        console.print(f"\n[dim]Brief-only mode — no generation performed.[/dim]")
+        return
+
+    from museloop.config import MuseLoopConfig
+    from museloop.core.loop import run_loop
+    from museloop.utils.logging import setup_logging
+
+    setup_logging(verbose=verbose)
+
+    config = MuseLoopConfig(
+        output_dir=output_dir,
+        max_iterations=2,
+        quality_threshold=0.6,
+    )
+
+    if verbose:
+        from museloop.ui.progress import PipelineProgress
+
+        progress = PipelineProgress()
+        with progress:
+            result_path = asyncio.run(
+                run_loop(str(brief_path), config, on_event=progress.on_event)
+            )
+    else:
+        console.print("\n  Generating...\n")
+        result_path = asyncio.run(run_loop(str(brief_path), config))
+
+    console.print(f"\n[green bold]Kit complete![/green bold] Output: {result_path}")
+
+
+@app.command()
 def version() -> None:
     """Show MuseLoop version."""
     console.print(f"MuseLoop v{__version__}")

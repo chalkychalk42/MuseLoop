@@ -1,0 +1,65 @@
+name: memecoin_social
+category: crypto
+description: Social media content factory — Twitter threads, memes, engagement bait
+default_style: degen
+default_skills:
+  - flux_gen
+  - image_gen
+  - img2img
+
+duration_range: [0, 0]
+
+export:
+  aspect_ratio: "16:9"
+  resolution: 1200x675
+  fps: 30
+  codec: h264
+
+steps:
+  - order: 1
+    skill: flux_gen
+    description: Generate launch announcement image (Twitter-optimized)
+    params:
+      width: 1200
+      height: 675
+
+  - order: 2
+    skill: flux_gen
+    description: Generate FOMO/hype graphic with chart imagery
+    params:
+      width: 1200
+      height: 675
+      guidance: 3.0
+
+  - order: 3
+    skill: flux_gen
+    description: Generate viral meme (community engagement)
+    params:
+      width: 1080
+      height: 1080
+
+  - order: 4
+    skill: flux_gen
+    description: Generate diamond hands / hodl meme
+    params:
+      width: 1200
+      height: 675
+      guidance: 3.0
+
+  - order: 5
+    skill: flux_gen
+    description: Generate partnership/collab announcement template
+    params:
+      width: 1200
+      height: 675
+
+constraints:
+  platforms:
+    - twitter
+    - telegram
+    - discord
+  content_types:
+    - announcement
+    - meme
+    - engagement
+    - fomo

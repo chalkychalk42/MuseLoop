@@ -1,0 +1,106 @@
+name: memecoin_launch
+category: crypto
+description: Full memecoin launch kit — logo, banners, social content, promo video thumbnail
+default_style: degen
+default_skills:
+  - flux_gen
+  - image_gen
+  - upscale
+
+duration_range: [0, 0]
+
+export:
+  aspect_ratio: "1:1"
+  resolution: 1024x1024
+  fps: 30
+  codec: h264
+
+steps:
+  - order: 1
+    skill: flux_gen
+    description: Generate token logo (1024x1024)
+    params:
+      width: 1024
+      height: 1024
+      guidance: 4.0
+
+  - order: 2
+    skill: flux_gen
+    description: Generate Dexscreener banner (1500x500)
+    params:
+      width: 1500
+      height: 500
+      guidance: 3.5
+
+  - order: 3
+    skill: flux_gen
+    description: Generate pump.fun banner (800x200)
+    params:
+      width: 800
+      height: 200
+
+  - order: 4
+    skill: flux_gen
+    description: Generate Twitter/X header banner (1500x500)
+    params:
+      width: 1500
+      height: 500
+
+  - order: 5
+    skill: flux_gen
+    description: Generate Twitter/X profile picture (400x400)
+    params:
+      width: 400
+      height: 400
+
+  - order: 6
+    skill: flux_gen
+    description: Generate launch announcement graphic
+    params:
+      width: 1200
+      height: 675
+
+  - order: 7
+    skill: flux_gen
+    description: Generate viral meme image
+    params:
+      width: 1200
+      height: 675
+
+  - order: 8
+    skill: flux_gen
+    description: Generate Telegram sticker
+    params:
+      width: 512
+      height: 512
+
+  - order: 9
+    skill: flux_gen
+    description: Generate Discord banner
+    params:
+      width: 960
+      height: 540
+
+  - order: 10
+    skill: upscale
+    description: Upscale logo for print/merch (4x)
+    params:
+      scale: 4
+
+constraints:
+  asset_types:
+    - token_logo
+    - dexscreener_banner
+    - pumpfun_banner
+    - twitter_header
+    - twitter_profile
+    - announcement_graphic
+    - meme_image
+    - telegram_sticker
+    - discord_banner
+  platforms:
+    - dexscreener
+    - pump.fun
+    - twitter
+    - telegram
+    - discord

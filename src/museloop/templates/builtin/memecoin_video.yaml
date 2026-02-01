@@ -1,0 +1,65 @@
+name: memecoin_video
+category: crypto
+description: Memecoin promo video — hype reel, launch teaser, TikTok/Twitter clip
+default_style: degen
+default_skills:
+  - flux_gen
+  - video_gen
+  - audio_gen
+  - editing
+  - captions
+
+duration_range: [15, 60]
+
+export:
+  aspect_ratio: "9:16"
+  resolution: 1080x1920
+  fps: 30
+  codec: h264
+
+steps:
+  - order: 1
+    skill: flux_gen
+    description: Generate key visual frames for the hype reel
+    params:
+      width: 1080
+      height: 1920
+      num_images: 5
+
+  - order: 2
+    skill: video_gen
+    description: Generate animated logo reveal / token intro
+    params:
+      duration: 5
+      style: cinematic
+
+  - order: 3
+    skill: audio_gen
+    description: Generate hype background music (bass-heavy, crypto vibes)
+    params:
+      duration: 30
+      genre: electronic
+      energy: high
+
+  - order: 4
+    skill: editing
+    description: Assemble frames into hype reel with music sync
+    params:
+      transitions: true
+      effects: true
+      text_overlay: true
+
+  - order: 5
+    skill: captions
+    description: Add animated captions for silent autoplay
+    params:
+      burn_in: true
+      style: bold
+
+constraints:
+  platforms:
+    - tiktok
+    - twitter
+    - youtube_shorts
+  max_duration_seconds: 60
+  vertical_format: true
